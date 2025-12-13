@@ -33,12 +33,9 @@ public class CounterStreamTask extends StreamTask implements StreamInputProcesso
     @Override
     public void processRecord(String record) {
         // [主线程] 正在处理数据
-        try {
-            TimeUnit.MILLISECONDS.sleep(2);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
         this.recordCount++;
+
+        // 模拟一点计算耗时
         if (recordCount % 10 == 0) {
             log.info("Task 处理进度: {} 条", recordCount);
         }
