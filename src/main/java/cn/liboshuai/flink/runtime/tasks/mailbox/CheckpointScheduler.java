@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class CheckpointScheduler extends Thread {
 
     private final MailboxExecutor taskMailboxExecutor;
-    private final CounterStreamTask task;
+    private final StreamTask task;
     private volatile boolean running = true;
 
     public CheckpointScheduler(CounterStreamTask task) {

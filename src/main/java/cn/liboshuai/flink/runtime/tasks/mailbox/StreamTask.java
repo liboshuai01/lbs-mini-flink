@@ -55,4 +55,6 @@ public abstract class StreamTask implements MailboxDefaultAction {
     // 子类实现具体的处理逻辑
     @Override
     public abstract void runDefaultAction(Controller controller) throws Exception;
+
+    public abstract void performCheckpoint(long checkpointId);
 }
