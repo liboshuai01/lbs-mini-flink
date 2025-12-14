@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
  * 展示了 Mailbox 模型如何协调 IO 线程、控制线程和主计算线程。
  */
 @Slf4j
-public class MiniFlinkV2App {
+public class EntryPoint {
 
     public static void main(String[] args) {
         log.info("=== Flink Mailbox 模型深度模拟启动 ===");
