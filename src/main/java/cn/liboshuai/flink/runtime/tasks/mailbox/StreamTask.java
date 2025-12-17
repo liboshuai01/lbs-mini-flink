@@ -4,7 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * 任务基类。
- * 核心修改：明确区分 Control Flow (优先级0) 和 Data Flow (优先级1) 的 Executor 配置。
+ * 修改点：
+ * 1. 增加了 ProcessingTimeService 的初始化和关闭。
+ * 2. 提供了 getProcessingTimeService() 供子类使用。
  */
 @Slf4j
 public abstract class StreamTask implements MailboxDefaultAction {
@@ -13,12 +15,17 @@ public abstract class StreamTask implements MailboxDefaultAction {
     protected final MailboxProcessor mailboxProcessor;
     protected final MailboxExecutor mainMailboxExecutor;
 
+    // [新增] 定时器服务
+    protected final ProcessingTimeService timerService;
+
     public StreamTask() {
         Thread currentThread = Thread.currentThread();
         this.mailbox = new TaskMailboxImpl(currentThread);
         this.mailboxProcessor = new MailboxProcessor(this, mailbox);
-        // 主执行器 (用于 task 内部自提交) 跟随 Processor 的默认优先级 (1)
         this.mainMailboxExecutor = mailboxProcessor.getMainExecutor();
+
+        // [新增] 初始化定时器服务
+        this.timerService = new SystemProcessingTimeService();
     }
 
     public final void invoke() throws Exception {
@@ -35,17 +42,20 @@ public abstract class StreamTask implements MailboxDefaultAction {
 
     private void close() {
         log.info("[StreamTask] 结束。");
+        // [新增] 关闭定时器服务资源
+        if (timerService != null) {
+            timerService.shutdownService();
+        }
         mailbox.close();
     }
 
-    /**
-     * 获取控制平面执行器。
-     * [关键] 强制使用 MailboxProcessor.MIN_PRIORITY (0)。
-     * 只有这样，CheckpointScheduler 提交的任务才会拥有 priority=0，
-     * 从而在 MailboxProcessor 的 "阶段 1" 中被优先抢占执行。
-     */
     public MailboxExecutor getControlMailboxExecutor() {
         return new MailboxExecutorImpl(mailbox, MailboxProcessor.MIN_PRIORITY);
+    }
+
+    // [新增] 暴露给子类使用
+    public ProcessingTimeService getProcessingTimeService() {
+        return timerService;
     }
 
     @Override
